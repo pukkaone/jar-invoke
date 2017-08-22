@@ -1,0 +1,29 @@
+.gradle/
+target/
+!gradle/wrapper/gradle-wrapper.jar
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+
+### IntelliJ IDEA ###
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+### Antlr v4 grammar plugin for IntelliJ IDEA
+*.tokens
+
+### NetBeans ###
+.nb-gradle/
+build/
+dist/
+nbbuild/
+nbdist/
+nbproject/private/
