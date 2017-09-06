@@ -1,0 +1,114 @@
+apply plugin: 'antlr'
+apply plugin: 'maven'
+apply plugin: 'signing'
+
+description = 'Elasticsearch plugin to invoke Java code'
+
+ext {
+  antlrVersion = '4.7'
+
+  isReleaseVersion = !(rootProject.version ==~ /.*-\d+-g[0-9a-f]+/)
+  uploadArchivesEnabled = isReleaseVersion &&
+      project.hasProperty('sonatypeUsername') && project.hasProperty('sonatypePassword')
+}
+
+dependencies {
+  antlr "org.antlr:antlr4:${antlrVersion}"
+  compile "org.antlr:antlr4-runtime:${antlrVersion}"
+  compile 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-maven:2.2.6'
+}
+
+generateGrammarSource {
+  outputDirectory = file("${buildDir}/generated-src/antlr/main/com/github/pukkaone/jarinvoke/parser")
+}
+
+jar {
+  baseName = rootProject.name
+  manifest {
+    attributes('Implementation-Version': project.version)
+  }
+}
+
+task pluginZip(type: Zip) {
+  baseName = rootProject.name
+  into('/') {
+    from('src/main/template/plugin-descriptor.properties') {
+      expand(project.properties)
+      filteringCharset = 'UTF-8'
+    }
+  }
+  into('/') {
+    from jar
+    from configurations.runtime
+    exclude 'guava*.jar'
+  }
+  doLast {
+    copy {
+      from pluginZip.archivePath
+      into pluginZip.destinationDir
+      rename { 'plugin.zip' }
+    }
+  }
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+  baseName = rootProject.name
+  classifier = 'javadoc'
+  from 'build/docs/javadoc'
+}
+
+task sourcesJar(type: Jar) {
+  baseName = rootProject.name
+  classifier = 'sources'
+  from sourceSets.main.allSource
+}
+
+artifacts {
+  archives pluginZip, javadocJar, sourcesJar
+}
+
+if (project.uploadArchivesEnabled) {
+  signing {
+    sign configurations.archives
+  }
+
+  uploadArchives {
+    repositories {
+      mavenDeployer {
+        beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+        repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2/') {
+          authentication(userName: sonatypeUsername, password: sonatypePassword)
+        }
+
+        pom.project {
+          name 'jar-invoke'
+          packaging 'jar'
+          description project.description
+          url 'https://github.com/pukkaone/jar-invoke'
+
+          scm {
+            connection 'scm:git:git@github.com:pukkaone/jar-invoke.git'
+            developerConnection 'scm:git:git@github.com:pukkaone/jar-invoke.git'
+            url 'https://github.com/pukkaone/jar-invoke'
+          }
+
+          licenses {
+            license {
+              name 'Apache License, Version 2.0'
+              url 'http://www.apache.org/licenses/LICENSE-2.0'
+              distribution 'repo'
+            }
+          }
+
+          developers {
+            developer {
+              id 'pukkaone'
+              name 'Chin Huang'
+            }
+          }
+        }
+      }
+    }
+  }
+}

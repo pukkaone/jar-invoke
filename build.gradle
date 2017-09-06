@@ -1,0 +1,41 @@
+rootProject.version = readVersion()
+
+// Gets version from Git tag.
+def readVersion() {
+  def output = new ByteArrayOutputStream()
+  def result = exec {
+    commandLine = ['git', 'describe']
+    standardOutput = output
+    ignoreExitValue = true
+  }
+  def version = (result.getExitValue() == 0) ?
+      output.toString().trim() : 'UNKNOWN'
+  println "Version ${version}"
+  return version
+}
+
+subprojects {
+  apply plugin: 'java'
+
+  group = 'com.github.pukkaone'
+  version = rootProject.version
+
+  sourceCompatibility = JavaVersion.VERSION_1_8
+  targetCompatibility = sourceCompatibility
+
+  ext {
+    elasticsearchVersion = '2.4.5'
+  }
+
+  repositories {
+    mavenLocal()
+    mavenCentral()
+  }
+
+  dependencies {
+    compileOnly "org.elasticsearch:elasticsearch:${elasticsearchVersion}"
+    compileOnly 'org.projectlombok:lombok:1.16.18'
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.mockito:mockito-core:2.9.0'
+  }
+}

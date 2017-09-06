@@ -1,0 +1,96 @@
+= Jar invoke Elasticsearch plugin {nbsp}image:https://maven-badges.herokuapp.com/maven-central/com.github.pukkaone/jar-invoke/badge.svg[Maven Central,link="https://maven-badges.herokuapp.com/maven-central/com.github.pukkaone/jar-invoke"]
+
+To deploy a new version of an Elasticsearch plugin, you need to restart every node in the
+Elasticsearch cluster where the plugin is installed. This plugin loads Java code at runtime, so you
+can deploy new code without needing to restart the Elasticsearch nodes.
+
+
+== SECURITY WARNING
+
+This plugin allows scripts to download and execute arbitrary code from the Internet.
+Installing it will make your information security officer cry.
+
+
+== Install
+
+Install the plugin using the command:
+
+    plugin install com.github.pukkaone/jar-invoke/VERSION
+
+Configure these properties in the `elasticsearch.yml` file:
+
+[source,yaml]
+----
+script.indexed: true
+script.inline: true
+security.manager.enabled: false
+----
+
+
+== Usage
+
+This plugin adds a script language named `jar-invoke` which implements statements to load and
+invoke Java code.
+
+
+=== Load JAR file
+
+Load JAR artifact from a Maven repository.
+
+====
+_module_ `= load('` _repositoryUri_ `', '` _mavenCoordinates_ `')`
+====
+
+[cols="1,3"]
+|====
+|Parameter|Description
+
+|_module_
+|name to assign to module
+
+|_repositoryUri_
+|Maven repository URI
+
+|_mavenCoordinates_
+|Maven artifact coordinates, in format _groupId:artifactId:version_
+|====
+
+.Example:
+----
+hello = load('http://repository.example.com/', 'com.example:hello:1.0')
+----
+
+
+=== Invoke Java static method
+
+Invoke static method of a Java class in a loaded JAR file.
+
+====
+_module_ `.invoke('` _className_ `', '` _methodName_ `')`
+====
+
+[cols="1,3"]
+|====
+|Parameter|Description
+
+|_module_
+|name of loaded module
+
+|_className_
+|Java class name
+
+|_methodName_
+|Java method name
+|====
+
+.Example:
+----
+hello.invoke('com.example.Hello', 'greet')
+----
+
+The Java method must have accept two Map parameters:
+
+[source,java]
+----
+public static Object greet(Map<String, Object> variables, Map<String, ScriptDocValues> docLookup) {
+----
