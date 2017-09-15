@@ -1,0 +1,19 @@
+dependencies {
+  testCompile project(':plugin')
+  testCompile 'ch.qos.logback:logback-classic:1.2.3'
+  testCompile 'com.github.tomakehurst:wiremock:2.8.0'
+  testCompile "org.elasticsearch:elasticsearch:${elasticsearchVersion}"
+  testCompile 'pl.allegro.tech:embedded-elasticsearch:2.4.0'
+}
+
+jar {
+  doLast {
+    copy {
+      from jar.archivePath
+      into "${buildDir}/resources/test/__files"
+      rename { 'integration-test.jar' }
+    }
+  }
+}
+
+test.dependsOn ':plugin:assemble', jar

@@ -1,2 +1,3 @@
 rootProject.name = 'jar-invoke'
 include 'plugin'
+include 'integration-test'
