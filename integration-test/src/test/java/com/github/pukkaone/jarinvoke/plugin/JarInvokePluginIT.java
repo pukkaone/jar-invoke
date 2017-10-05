@@ -1,6 +1,7 @@
 package com.github.pukkaone.jarinvoke.plugin;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.head;
 import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
@@ -37,11 +38,14 @@ import pl.allegro.tech.embeddedelasticsearch.PopularProperties;
 @RunWith(JUnit4.class)
 public class JarInvokePluginIT {
 
+  private static final String POM_PATH =
+      "/com/github/pukkaone/integration-test/0-SNAPSHOT/integration-test-0-SNAPSHOT.pom";
+  private static final String JAR_PATH =
+      "/com/github/pukkaone/integration-test/0-SNAPSHOT/integration-test-0-SNAPSHOT.jar";
   private static final String CLUSTER_NAME = "elasticsearch-test";
   private static final String INDEX = "example";
   private static final String TYPE = "document";
 
-  private static int transportTcpPort;
   private static EmbeddedElastic embeddedElastic;
   private static TransportClient client;
 
@@ -84,9 +88,13 @@ public class JarInvokePluginIT {
   }
 
   private static void loadModule() {
-    stubFor(get(urlPathEqualTo("/com/github/pukkaone/integration-test/0-SNAPSHOT/integration-test-0-SNAPSHOT.pom"))
+    stubFor(head(urlPathEqualTo(POM_PATH))
+            .willReturn(ok()));
+    stubFor(get(urlPathEqualTo(POM_PATH))
             .willReturn(ok().withBodyFile("integration-test.pom")));
-    stubFor(get(urlPathEqualTo("/com/github/pukkaone/integration-test/0-SNAPSHOT/integration-test-0-SNAPSHOT.jar"))
+    stubFor(head(urlPathEqualTo(JAR_PATH))
+            .willReturn(ok()));
+    stubFor(get(urlPathEqualTo(JAR_PATH))
             .willReturn(ok().withBodyFile("integration-test.jar")));
 
     executeScript(
@@ -96,7 +104,7 @@ public class JarInvokePluginIT {
 
   @BeforeClass
   public static void beforeClass() throws Exception {
-    transportTcpPort = findAvailableTcpPort();
+    int transportTcpPort = findAvailableTcpPort();
 
     embeddedElastic = EmbeddedElastic.builder()
         .withElasticVersion(Version.CURRENT.number())

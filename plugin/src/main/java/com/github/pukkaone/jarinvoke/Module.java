@@ -54,7 +54,8 @@ public class Module implements Closeable {
   }
 
   private static MavenRemoteRepository createRemoteRepostory(String repositoryUri) {
-    return MavenRemoteRepositories.createRemoteRepository("internal", repositoryUri, "default")
+    String repositoryId = "dynamic" + System.currentTimeMillis();
+    return MavenRemoteRepositories.createRemoteRepository(repositoryId, repositoryUri, "default")
         .setUpdatePolicy(MavenUpdatePolicy.UPDATE_POLICY_ALWAYS);
   }
 
