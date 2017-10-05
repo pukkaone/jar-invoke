@@ -8,7 +8,7 @@ ext {
   antlrVersion = '4.7'
 
   isReleaseVersion = !(rootProject.version ==~ /.*-\d+-g[0-9a-f]+/)
-  uploadArchivesEnabled = isReleaseVersion &&
+  isUploadArchivesEnabled = isReleaseVersion &&
       project.hasProperty('sonatypeUsername') && project.hasProperty('sonatypePassword')
 }
 
@@ -54,7 +54,7 @@ task pluginZip(type: Zip) {
 task javadocJar(type: Jar, dependsOn: javadoc) {
   baseName = rootProject.name
   classifier = 'javadoc'
-  from 'build/docs/javadoc'
+  from javadoc.destinationDir
 }
 
 task sourcesJar(type: Jar) {
@@ -67,7 +67,7 @@ artifacts {
   archives pluginZip, javadocJar, sourcesJar
 }
 
-if (project.uploadArchivesEnabled) {
+if (project.isUploadArchivesEnabled) {
   signing {
     sign configurations.archives
   }

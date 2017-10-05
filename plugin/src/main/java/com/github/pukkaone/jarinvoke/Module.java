@@ -8,10 +8,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 import org.elasticsearch.index.fielddata.ScriptDocValues;
 import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.jboss.shrinkwrap.resolver.api.maven.repository.MavenRemoteRepositories;
@@ -37,8 +35,8 @@ public class Module implements Closeable {
   public Module(String repositoryUri, String mavenCoordinates) {
     ClassLoader originalContextClassLoader = Thread.currentThread().getContextClassLoader();
     try {
-      // Because Maven.configureResolver() tries to load classes using the
-      // current thread context class loader.
+      // Because Maven.configureResolver() uses the current thread context class
+      // loader to load classes.
       Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
 
       File[] jarFiles = Maven.configureResolver()
@@ -46,12 +44,10 @@ public class Module implements Closeable {
           .resolve(mavenCoordinates)
           .withTransitivity()
           .asFile();
-      List<URL> urls = Arrays.stream(jarFiles)
+      URL[] urls = Arrays.stream(jarFiles)
           .map(Module::toURL)
-          .collect(Collectors.toList());
-
-      classLoader = new URLClassLoader(
-          urls.toArray(new URL[urls.size()]), getClass().getClassLoader());
+          .toArray(URL[]::new);
+      classLoader = new URLClassLoader(urls, getClass().getClassLoader());
     } finally {
       Thread.currentThread().setContextClassLoader(originalContextClassLoader);
     }
