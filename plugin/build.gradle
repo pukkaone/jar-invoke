@@ -36,6 +36,7 @@ task pluginZip(type: Zip) {
       expand(project.properties)
       filteringCharset = 'UTF-8'
     }
+    from 'src/main/template/plugin-security.policy'
   }
   into('/') {
     from jar

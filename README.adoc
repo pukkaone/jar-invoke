@@ -23,7 +23,6 @@ Configure these properties in the `elasticsearch.yml` file:
 ----
 script.indexed: true
 script.inline: true
-security.manager.enabled: false
 ----
 
 

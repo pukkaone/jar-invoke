@@ -112,7 +112,6 @@ public class JarInvokePluginIT {
         .withSetting(PopularProperties.TRANSPORT_TCP_PORT, transportTcpPort)
         .withSetting("script.indexed", true)
         .withSetting("script.inline", true)
-        .withSetting("security.manager.enabled", false)
         .withPlugin("file:../plugin/build/distributions/plugin.zip")
         .withCleanInstallationDirectoryOnStop(true)
         .withIndex(INDEX, IndexSettings.builder()

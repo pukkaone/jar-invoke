@@ -6,6 +6,8 @@ import com.github.pukkaone.jarinvoke.parser.JarInvokeParser.InvokeExpressionCont
 import com.github.pukkaone.jarinvoke.parser.JarInvokeParser.LoadStatementContext;
 import com.github.pukkaone.jarinvoke.parser.JarInvokeParser.TranslationUnitContext;
 import java.io.Closeable;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.antlr.v4.runtime.CharStream;
@@ -73,6 +75,18 @@ public class ModuleResolver implements Closeable {
     throw new IllegalArgumentException("Failed to parse " + scriptSource);
   }
 
+  private Void doLoad(String moduleName, String repositoryUri, String mavenCoordinates) {
+    Module module = nameToModuleMap.get(moduleName);
+    if (module != null) {
+      module.close();
+    }
+
+    module = new Module(repositoryUri, mavenCoordinates);
+    nameToModuleMap.put(moduleName, module);
+
+    return null;
+  }
+
   /**
    * Loads JAR file from Maven repository.
    *
@@ -84,13 +98,23 @@ public class ModuleResolver implements Closeable {
    *     group ID, artifact ID and version separated by {@code :}
    */
   public synchronized void load(String moduleName, String repositoryUri, String mavenCoordinates) {
+    AccessController.doPrivileged((PrivilegedAction<Void>) () ->
+        doLoad(moduleName, repositoryUri, mavenCoordinates));
+  }
+
+  private Object doInvoke(
+      String moduleName,
+      String className,
+      String methodName,
+      Map<String, Object> variables,
+      Map<String, ScriptDocValues> docLookup) {
+
     Module module = nameToModuleMap.get(moduleName);
-    if (module != null) {
-      module.close();
+    if (module == null) {
+      throw new IllegalArgumentException("Unknown module " + moduleName);
     }
 
-    module = new Module(repositoryUri, mavenCoordinates);
-    nameToModuleMap.put(moduleName, module);
+    return module.invoke(className, methodName, variables, docLookup);
   }
 
   /**
@@ -115,17 +139,19 @@ public class ModuleResolver implements Closeable {
       Map<String, Object> variables,
       Map<String, ScriptDocValues> docLookup) {
 
-    Module module = nameToModuleMap.get(moduleName);
-    if (module == null) {
-      throw new IllegalArgumentException("Unknown module " + moduleName);
-    }
+    return AccessController.doPrivileged((PrivilegedAction<Object>) () ->
+        doInvoke(moduleName, className, methodName, variables, docLookup));
+  }
 
-    return module.invoke(className, methodName, variables, docLookup);
+  private Void doClose() {
+    nameToModuleMap.forEach((name, module) -> module.close());
+    nameToModuleMap.clear();
+
+    return null;
   }
 
   @Override
   public void close() {
-    nameToModuleMap.forEach((name, module) -> module.close());
-    nameToModuleMap.clear();
+    AccessController.doPrivileged((PrivilegedAction<Void>) this::doClose);
   }
 }
