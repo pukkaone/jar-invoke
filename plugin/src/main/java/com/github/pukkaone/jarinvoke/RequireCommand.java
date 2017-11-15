@@ -6,11 +6,11 @@ import lombok.RequiredArgsConstructor;
 import org.elasticsearch.index.fielddata.ScriptDocValues;
 
 /**
- * Command to load JAR file.
+ * Command to load JAR file if not already loaded.
  */
 @Data
 @RequiredArgsConstructor
-public class LoadCommand implements Command {
+public class RequireCommand implements Command {
 
   private final ModuleResolver moduleResolver;
   private final String moduleName;
@@ -19,7 +19,7 @@ public class LoadCommand implements Command {
 
   @Override
   public Object execute(Map<String, Object> variables, Map<String, ScriptDocValues> docLookup) {
-    moduleResolver.load(moduleName, repositoryUri, jarCoordinates);
+    moduleResolver.require(moduleName, repositoryUri, jarCoordinates);
     return true;
   }
 }

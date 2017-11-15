@@ -4,10 +4,14 @@ import com.github.pukkaone.jarinvoke.parser.JarInvokeLexer;
 import com.github.pukkaone.jarinvoke.parser.JarInvokeParser;
 import com.github.pukkaone.jarinvoke.parser.JarInvokeParser.InvokeExpressionContext;
 import com.github.pukkaone.jarinvoke.parser.JarInvokeParser.LoadStatementContext;
+import com.github.pukkaone.jarinvoke.parser.JarInvokeParser.RequireStatementContext;
+import com.github.pukkaone.jarinvoke.parser.JarInvokeParser.StatementContext;
 import com.github.pukkaone.jarinvoke.parser.JarInvokeParser.TranslationUnitContext;
 import java.io.Closeable;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.antlr.v4.runtime.CharStream;
@@ -48,8 +52,27 @@ public class ModuleResolver implements Closeable {
   private LoadCommand createLoadCommand(LoadStatementContext loadStatement) {
     String moduleName = loadStatement.IDENTIFIER().getText();
     String repositoryUri = trimQuotes(loadStatement.STRING_LITERAL(0).getText());
-    String mavenCoordinates = trimQuotes(loadStatement.STRING_LITERAL(1).getText());
-    return new LoadCommand(this, moduleName, repositoryUri, mavenCoordinates);
+    String jarCoordinates = trimQuotes(loadStatement.STRING_LITERAL(1).getText());
+    return new LoadCommand(this, moduleName, repositoryUri, jarCoordinates);
+  }
+
+  private RequireCommand createRequireCommand(RequireStatementContext requireStatement) {
+    String moduleName = requireStatement.IDENTIFIER().getText();
+    String repositoryUri = trimQuotes(requireStatement.STRING_LITERAL(0).getText());
+    String jarCoordinates = trimQuotes(requireStatement.STRING_LITERAL(1).getText());
+    return new RequireCommand(this, moduleName, repositoryUri, jarCoordinates);
+  }
+
+  private Command toCommand(StatementContext statement) {
+    if (statement.invokeExpression() != null) {
+      return createInvokeCommand(statement.invokeExpression());
+    } else if (statement.loadStatement() != null) {
+      return createLoadCommand(statement.loadStatement());
+    } else if (statement.requireStatement() != null) {
+      return createRequireCommand(statement.requireStatement());
+    }
+
+    throw new IllegalArgumentException("Failed to parse " + statement);
   }
 
   /**
@@ -66,22 +89,30 @@ public class ModuleResolver implements Closeable {
     JarInvokeParser parser = new JarInvokeParser(tokens);
     TranslationUnitContext translationUnit = parser.translationUnit();
 
-    if (translationUnit.invokeExpression() != null) {
-      return createInvokeCommand(translationUnit.invokeExpression());
-    } else if (translationUnit.loadStatement() != null) {
-      return createLoadCommand(translationUnit.loadStatement());
+    List<Command> commands = new ArrayList<>();
+    for (StatementContext statement : translationUnit.statement()) {
+      Command command = toCommand(statement);
+      commands.add(command);
     }
 
-    throw new IllegalArgumentException("Failed to parse " + scriptSource);
+    return new CompositeCommand(commands);
   }
 
-  private Void doLoad(String moduleName, String repositoryUri, String mavenCoordinates) {
+  private Void doLoad(
+      String moduleName,
+      String repositoryUri,
+      String jarCoordinates,
+      boolean retainAlreadyLoadedModule) {
+
     Module module = nameToModuleMap.get(moduleName);
     if (module != null) {
+      if (retainAlreadyLoadedModule) {
+        return null;
+      }
       module.close();
     }
 
-    module = new Module(repositoryUri, mavenCoordinates);
+    module = new Module(repositoryUri, jarCoordinates);
     nameToModuleMap.put(moduleName, module);
 
     return null;
@@ -94,12 +125,27 @@ public class ModuleResolver implements Closeable {
    *     name of module to assign
    * @param repositoryUri
    *     repository URI
-   * @param mavenCoordinates
+   * @param jarCoordinates
    *     group ID, artifact ID and version separated by {@code :}
    */
-  public synchronized void load(String moduleName, String repositoryUri, String mavenCoordinates) {
+  public synchronized void load(String moduleName, String repositoryUri, String jarCoordinates) {
     AccessController.doPrivileged((PrivilegedAction<Void>) () ->
-        doLoad(moduleName, repositoryUri, mavenCoordinates));
+        doLoad(moduleName, repositoryUri, jarCoordinates, false));
+  }
+
+  /**
+   * Loads JAR file from Maven repository if not already loaded.
+   *
+   * @param moduleName
+   *     name of module to assign
+   * @param repositoryUri
+   *     repository URI
+   * @param jarCoordinates
+   *     group ID, artifact ID and version separated by {@code :}
+   */
+  public synchronized void require(String moduleName, String repositoryUri, String jarCoordinates) {
+    AccessController.doPrivileged((PrivilegedAction<Void>) () ->
+        doLoad(moduleName, repositoryUri, jarCoordinates, true));
   }
 
   private Object doInvoke(

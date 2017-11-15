@@ -32,12 +32,12 @@ This plugin adds a script language named `jar-invoke` which implements statement
 invoke Java code.
 
 
-=== Load JAR file
+=== Require JAR file
 
-Load JAR artifact from a Maven repository.
+Load JAR artifact from a Maven repository if not already loaded.
 
 ====
-_module_ `= load('` _repositoryUri_ `', '` _mavenCoordinates_ `')`
+_module_ `= require('` _repositoryUri_ `', '` _jarCoordinates_ `')`
 ====
 
 [cols="1,3"]
@@ -50,14 +50,9 @@ _module_ `= load('` _repositoryUri_ `', '` _mavenCoordinates_ `')`
 |_repositoryUri_
 |Maven repository URI
 
-|_mavenCoordinates_
+|_jarCoordinates_
 |Maven artifact coordinates, in format _groupId:artifactId:version_
 |====
-
-.Example:
-----
-hello = load('http://repository.example.com/', 'com.example:hello:1.0')
-----
 
 
 === Invoke Java static method
@@ -84,6 +79,7 @@ _module_ `.invoke('` _className_ `', '` _methodName_ `')`
 
 .Example:
 ----
+hello = require('http://repository.example.com/', 'com.example:hello:1.0')
 hello.invoke('com.example.Hello', 'greet')
 ----
 
@@ -92,4 +88,32 @@ The Java method must have accept two Map parameters:
 [source,java]
 ----
 public static Object greet(Map<String, Object> variables, Map<String, ScriptDocValues> docLookup) {
+----
+
+
+=== Load JAR file
+
+Load JAR artifact from a Maven repository even if it was already loaded.
+
+====
+_module_ `= load('` _repositoryUri_ `', '` _jarCoordinates_ `')`
+====
+
+[cols="1,3"]
+|====
+|Parameter|Description
+
+|_module_
+|name to assign to module
+
+|_repositoryUri_
+|Maven repository URI
+
+|_jarCoordinates_
+|Maven artifact coordinates, in format _groupId:artifactId:version_
+|====
+
+.Example:
+----
+hello = load('http://repository.example.com/', 'com.example:hello:1.0')
 ----

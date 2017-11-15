@@ -48,6 +48,7 @@ public class JarInvokePluginIT {
 
   private static EmbeddedElastic embeddedElastic;
   private static TransportClient client;
+  private static String requireStatement;
 
   @ClassRule
   public static WireMockClassRule wireMock = new WireMockClassRule(wireMockConfig()
@@ -87,21 +88,6 @@ public class JarInvokePluginIT {
     return response;
   }
 
-  private static void loadModule() {
-    stubFor(head(urlPathEqualTo(POM_PATH))
-            .willReturn(ok()));
-    stubFor(get(urlPathEqualTo(POM_PATH))
-            .willReturn(ok().withBodyFile("integration-test.pom")));
-    stubFor(head(urlPathEqualTo(JAR_PATH))
-            .willReturn(ok()));
-    stubFor(get(urlPathEqualTo(JAR_PATH))
-            .willReturn(ok().withBodyFile("integration-test.jar")));
-
-    executeScript(
-        "hello = load('http://localhost:" + wireMock.port() + "/', 'com.github.pukkaone:integration-test:0-SNAPSHOT')",
-        null);
-  }
-
   @BeforeClass
   public static void beforeClass() throws Exception {
     int transportTcpPort = findAvailableTcpPort();
@@ -123,7 +109,16 @@ public class JarInvokePluginIT {
 
     embeddedElastic.index(INDEX, TYPE, "{\"id\": 1, \"title\": \"Volume\"}");
 
-    loadModule();
+    stubFor(head(urlPathEqualTo(POM_PATH))
+            .willReturn(ok()));
+    stubFor(get(urlPathEqualTo(POM_PATH))
+            .willReturn(ok().withBodyFile("integration-test.pom")));
+    stubFor(head(urlPathEqualTo(JAR_PATH))
+            .willReturn(ok()));
+    stubFor(get(urlPathEqualTo(JAR_PATH))
+            .willReturn(ok().withBodyFile("integration-test.jar")));
+
+    requireStatement = "hello = require('http://localhost:" + wireMock.port() + "/', 'com.github.pukkaone:integration-test:0-SNAPSHOT')\n";
   }
 
   @AfterClass
@@ -134,6 +129,7 @@ public class JarInvokePluginIT {
   @Test
   public void should_read_script_parameters() {
     SearchResponse response = executeScript(
+        requireStatement +
         "hello.invoke('com.github.pukkaone.jarinvoke.example.Example', 'echoVariables')",
         ImmutableMap.of("factor", 1));
 
@@ -144,6 +140,7 @@ public class JarInvokePluginIT {
   @Test
   public void should_read_long_doc_value() {
     SearchResponse response = executeScript(
+        requireStatement +
         "hello.invoke('com.github.pukkaone.jarinvoke.example.Example', 'getDocValue')",
         ImmutableMap.of("field", "id"));
 
@@ -154,10 +151,21 @@ public class JarInvokePluginIT {
   @Test
   public void should_read_string_doc_value() {
     SearchResponse response = executeScript(
+        requireStatement +
         "hello.invoke('com.github.pukkaone.jarinvoke.example.Example', 'getDocValue')",
         ImmutableMap.of("field", "title"));
 
     SearchHitField dummy = response.getHits().getAt(0).field("dummy");
     assertThat(dummy.<String>getValue()).isEqualTo("volume");
+  }
+
+  @Test
+  public void should_load_module() {
+    SearchResponse response = executeScript(
+        "hello = load('http://localhost:" + wireMock.port() + "/', 'com.github.pukkaone:integration-test:0-SNAPSHOT')",
+        null);
+
+    SearchHitField dummy = response.getHits().getAt(0).field("dummy");
+    assertThat(dummy.<Boolean>getValue()).isTrue();
   }
 }

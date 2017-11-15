@@ -1,25 +1,27 @@
 package com.github.pukkaone.jarinvoke;
 
+import java.util.List;
 import java.util.Map;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.elasticsearch.index.fielddata.ScriptDocValues;
 
 /**
- * Command to load JAR file.
+ * Executes multiple commands.
  */
 @Data
 @RequiredArgsConstructor
-public class LoadCommand implements Command {
+public class CompositeCommand implements Command {
 
-  private final ModuleResolver moduleResolver;
-  private final String moduleName;
-  private final String repositoryUri;
-  private final String jarCoordinates;
+  private final List<Command> commands;
 
   @Override
   public Object execute(Map<String, Object> variables, Map<String, ScriptDocValues> docLookup) {
-    moduleResolver.load(moduleName, repositoryUri, jarCoordinates);
-    return true;
+    Object result = null;
+    for (Command command : commands) {
+      result = command.execute(variables, docLookup);
+    }
+
+    return result;
   }
 }

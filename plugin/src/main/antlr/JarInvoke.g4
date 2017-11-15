@@ -35,8 +35,13 @@ fragment LetterOrDigit
 	;
 
 translationUnit
-  : invokeExpression EOF
-  | loadStatement EOF
+  : statement* EOF
+  ;
+
+statement
+  : invokeExpression
+  | loadStatement
+  | requireStatement
   ;
 
 invokeExpression
@@ -45,4 +50,8 @@ invokeExpression
 
 loadStatement
   : IDENTIFIER '=' 'load' '(' STRING_LITERAL ',' STRING_LITERAL ')'
+  ;
+
+requireStatement
+  : IDENTIFIER '=' 'require' '(' STRING_LITERAL ',' STRING_LITERAL ')'
   ;
