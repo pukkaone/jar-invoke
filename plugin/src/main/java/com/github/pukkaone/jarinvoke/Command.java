@@ -17,5 +17,5 @@ public interface Command {
    *     document field names and values
    * @return value which script returns
    */
-  Object execute(Map<String, Object> variables, Map<String, ScriptDocValues> docLookup);
+  Object execute(Map<String, Object> variables, Map<String, ScriptDocValues<?>> docLookup);
 }

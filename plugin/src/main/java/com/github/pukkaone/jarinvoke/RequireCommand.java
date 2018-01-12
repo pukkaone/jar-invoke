@@ -18,7 +18,7 @@ public class RequireCommand implements Command {
   private final String jarCoordinates;
 
   @Override
-  public Object execute(Map<String, Object> variables, Map<String, ScriptDocValues> docLookup) {
+  public Object execute(Map<String, Object> variables, Map<String, ScriptDocValues<?>> docLookup) {
     moduleResolver.require(moduleName, repositoryUri, jarCoordinates);
     return true;
   }

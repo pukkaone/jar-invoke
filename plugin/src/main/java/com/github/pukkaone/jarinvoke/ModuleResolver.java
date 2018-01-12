@@ -153,7 +153,7 @@ public class ModuleResolver implements Closeable {
       String className,
       String methodName,
       Map<String, Object> variables,
-      Map<String, ScriptDocValues> docLookup) {
+      Map<String, ScriptDocValues<?>> docLookup) {
 
     Module module = nameToModuleMap.get(moduleName);
     if (module == null) {
@@ -183,7 +183,7 @@ public class ModuleResolver implements Closeable {
       String className,
       String methodName,
       Map<String, Object> variables,
-      Map<String, ScriptDocValues> docLookup) {
+      Map<String, ScriptDocValues<?>> docLookup) {
 
     return AccessController.doPrivileged((PrivilegedAction<Object>) () ->
         doInvoke(moduleName, className, methodName, variables, docLookup));

@@ -18,7 +18,7 @@ public class LoadCommand implements Command {
   private final String jarCoordinates;
 
   @Override
-  public Object execute(Map<String, Object> variables, Map<String, ScriptDocValues> docLookup) {
+  public Object execute(Map<String, Object> variables, Map<String, ScriptDocValues<?>> docLookup) {
     moduleResolver.load(moduleName, repositoryUri, jarCoordinates);
     return true;
   }

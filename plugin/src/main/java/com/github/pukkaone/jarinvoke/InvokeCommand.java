@@ -18,7 +18,7 @@ public class InvokeCommand implements Command {
   private final String methodName;
 
   @Override
-  public Object execute(Map<String, Object> variables, Map<String, ScriptDocValues> docLookup) {
+  public Object execute(Map<String, Object> variables, Map<String, ScriptDocValues<?>> docLookup) {
     return moduleResolver.invoke(moduleName, className, methodName, variables, docLookup);
   }
 }

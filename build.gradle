@@ -21,10 +21,9 @@ subprojects {
   version = rootProject.version
 
   sourceCompatibility = JavaVersion.VERSION_1_8
-  targetCompatibility = sourceCompatibility
 
   ext {
-    elasticsearchVersion = '2.4.5'
+    elasticsearchVersion = '6.1.1'
   }
 
   repositories {
@@ -34,8 +33,9 @@ subprojects {
 
   dependencies {
     compileOnly "org.elasticsearch:elasticsearch:${elasticsearchVersion}"
-    compileOnly 'org.projectlombok:lombok:1.16.18'
+    compileOnly 'org.projectlombok:lombok:1.16.20'
     testCompile 'junit:junit:4.12'
-    testCompile 'org.assertj:assertj-core:3.8.0'
+    testCompile 'org.assertj:assertj-core:3.9.0'
+    testCompile "org.elasticsearch.client:transport:${elasticsearchVersion}"
   }
 }

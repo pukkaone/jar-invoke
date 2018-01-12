@@ -13,15 +13,19 @@ import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.Map;
 import org.elasticsearch.Version;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.document.DocumentField;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.script.Script;
-import org.elasticsearch.script.ScriptService;
-import org.elasticsearch.search.SearchHitField;
+import org.elasticsearch.script.ScriptType;
+import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -63,22 +67,20 @@ public class JarInvokePluginIT {
   }
 
   private static TransportClient createClient(int transportTcpPort) throws IOException {
-    Settings settings = Settings.settingsBuilder()
+    Settings settings = Settings.builder()
         .put(PopularProperties.CLUSTER_NAME, CLUSTER_NAME)
         .build();
-    TransportClient client = TransportClient.builder()
-        .settings(settings)
-        .build();
-    client.addTransportAddress(
-        new InetSocketTransportAddress(InetAddress.getLoopbackAddress(), transportTcpPort));
+    TransportClient client = new PreBuiltTransportClient(settings)
+        .addTransportAddress(
+            new TransportAddress(InetAddress.getLoopbackAddress(), transportTcpPort));
     return client;
   }
 
   private static SearchResponse executeScript(String scriptSource, Map<String, Object> parameters) {
     Script script = new Script(
+        ScriptType.INLINE,
+        JarInvokeScriptEngine.LANGUAGE,
         scriptSource,
-        ScriptService.ScriptType.INLINE,
-        JarInvokePlugin.NAME,
         parameters);
     SearchResponse response = client.prepareSearch(INDEX)
         .addScriptField("dummy", script)
@@ -92,16 +94,19 @@ public class JarInvokePluginIT {
   public static void beforeClass() throws Exception {
     int transportTcpPort = findAvailableTcpPort();
 
+    Path pluginFile = Paths.get(".")
+        .toAbsolutePath()
+        .resolve("../plugin/build/distributions/plugin.zip")
+        .normalize();
+
     embeddedElastic = EmbeddedElastic.builder()
-        .withElasticVersion(Version.CURRENT.number())
+        .withElasticVersion(Version.CURRENT.toString())
         .withSetting(PopularProperties.CLUSTER_NAME, CLUSTER_NAME)
         .withSetting(PopularProperties.TRANSPORT_TCP_PORT, transportTcpPort)
-        .withSetting("script.indexed", true)
-        .withSetting("script.inline", true)
-        .withPlugin("file:../plugin/build/distributions/plugin.zip")
-        .withCleanInstallationDirectoryOnStop(true)
+        .withPlugin("file:" + pluginFile)
         .withIndex(INDEX, IndexSettings.builder()
-            .withSettings(JarInvokePluginIT.class.getResourceAsStream("settings-mappings.json"))
+            .withSettings(JarInvokePluginIT.class.getResourceAsStream("settings.json"))
+            .withType(TYPE, JarInvokePluginIT.class.getResourceAsStream("mappings.json"))
             .build())
         .build()
         .start();
@@ -133,7 +138,7 @@ public class JarInvokePluginIT {
         "hello.invoke('com.github.pukkaone.jarinvoke.example.Example', 'echoVariables')",
         ImmutableMap.of("factor", 1));
 
-    SearchHitField dummy = response.getHits().getAt(0).field("dummy");
+    DocumentField dummy = response.getHits().getAt(0).field("dummy");
     assertThat(dummy.<String>getValue()).isEqualTo("{factor=1}");
   }
 
@@ -144,7 +149,7 @@ public class JarInvokePluginIT {
         "hello.invoke('com.github.pukkaone.jarinvoke.example.Example', 'getDocValue')",
         ImmutableMap.of("field", "id"));
 
-    SearchHitField dummy = response.getHits().getAt(0).field("dummy");
+    DocumentField dummy = response.getHits().getAt(0).field("dummy");
     assertThat(dummy.<Long>getValue()).isEqualTo(1L);
   }
 
@@ -155,17 +160,17 @@ public class JarInvokePluginIT {
         "hello.invoke('com.github.pukkaone.jarinvoke.example.Example', 'getDocValue')",
         ImmutableMap.of("field", "title"));
 
-    SearchHitField dummy = response.getHits().getAt(0).field("dummy");
-    assertThat(dummy.<String>getValue()).isEqualTo("volume");
+    DocumentField dummy = response.getHits().getAt(0).field("dummy");
+    assertThat(dummy.<String>getValue()).isEqualTo("Volume");
   }
 
   @Test
   public void should_load_module() {
     SearchResponse response = executeScript(
         "hello = load('http://localhost:" + wireMock.port() + "/', 'com.github.pukkaone:integration-test:0-SNAPSHOT')",
-        null);
+        Collections.emptyMap());
 
-    SearchHitField dummy = response.getHits().getAt(0).field("dummy");
+    DocumentField dummy = response.getHits().getAt(0).field("dummy");
     assertThat(dummy.<Boolean>getValue()).isTrue();
   }
 }

@@ -1,0 +1,12 @@
+{
+  "document": {
+    "properties": {
+      "id": {
+        "type": "long"
+      },
+      "title": {
+        "type": "keyword"
+      }
+    }
+  }
+}

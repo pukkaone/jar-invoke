@@ -1,26 +1,19 @@
 package com.github.pukkaone.jarinvoke.plugin;
 
+import java.util.Collection;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.plugins.Plugin;
-import org.elasticsearch.script.ScriptModule;
+import org.elasticsearch.plugins.ScriptPlugin;
+import org.elasticsearch.script.ScriptContext;
+import org.elasticsearch.script.ScriptEngine;
 
 /**
  * Elasticsearch plugin to invoke Java code.
  */
-public class JarInvokePlugin extends Plugin {
-
-  public static final String NAME = "jar-invoke";
+public class JarInvokePlugin extends Plugin implements ScriptPlugin {
 
   @Override
-  public String name() {
-    return NAME;
-  }
-
-  @Override
-  public String description() {
-    return "Invokes Java code";
-  }
-
-  public void onModule(ScriptModule module) {
-    module.addScriptEngine(JarInvokeScriptEngine.class);
+  public ScriptEngine getScriptEngine(Settings settings, Collection<ScriptContext<?>> contexts) {
+    return new JarInvokeScriptEngine();
   }
 }

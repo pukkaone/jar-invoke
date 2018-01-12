@@ -101,7 +101,7 @@ public class Module implements Closeable {
       String className,
       String methodName,
       Map<String, Object> variables,
-      Map<String, ScriptDocValues> docLookup) {
+      Map<String, ScriptDocValues<?>> docLookup) {
 
     try {
       Method method = resolveMethod(className, methodName);

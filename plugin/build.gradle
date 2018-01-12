@@ -31,17 +31,17 @@ jar {
 
 task pluginZip(type: Zip) {
   baseName = rootProject.name
-  into('/') {
+  into('/elasticsearch') {
     from('src/main/template/plugin-descriptor.properties') {
       expand(project.properties)
       filteringCharset = 'UTF-8'
     }
     from 'src/main/template/plugin-security.policy'
   }
-  into('/') {
+  into('/elasticsearch') {
     from jar
     from configurations.runtime
-    exclude 'guava*.jar'
+    exclude "antlr4-${antlrVersion}.jar"
   }
   doLast {
     copy {

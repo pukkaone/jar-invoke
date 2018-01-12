@@ -16,7 +16,7 @@ public class CompositeCommand implements Command {
   private final List<Command> commands;
 
   @Override
-  public Object execute(Map<String, Object> variables, Map<String, ScriptDocValues> docLookup) {
+  public Object execute(Map<String, Object> variables, Map<String, ScriptDocValues<?>> docLookup) {
     Object result = null;
     for (Command command : commands) {
       result = command.execute(variables, docLookup);
