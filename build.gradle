@@ -23,7 +23,7 @@ subprojects {
   sourceCompatibility = JavaVersion.VERSION_1_8
 
   ext {
-    elasticsearchVersion = '6.1.1'
+    elasticsearchVersion = '6.1.2'
   }
 
   repositories {
