@@ -1,35 +1,30 @@
 = Jar invoke Elasticsearch plugin {nbsp}image:https://maven-badges.herokuapp.com/maven-central/com.github.pukkaone/jar-invoke/badge.svg[Maven Central,link="https://maven-badges.herokuapp.com/maven-central/com.github.pukkaone/jar-invoke"]
 
-To deploy a new version of an Elasticsearch plugin, you need to restart every node in the
-Elasticsearch cluster where the plugin is installed. This plugin loads Java code at runtime, so you
-can deploy new code without needing to restart the Elasticsearch nodes.
+To execute custom code in Elasticsearch, you can write an Elasticsearch plugin.
+However, a plugin introduces an operational complication. To deploy a new
+version of an Elasticsearch plugin, you need to restart every node in the
+Elasticsearch cluster where the plugin is installed. This plugin loads Java
+code at runtime, so you can deploy new code without needing to restart the
+Elasticsearch nodes.
 
 
 == SECURITY WARNING
 
-This plugin allows scripts to download and execute arbitrary code from the Internet.
-Installing it will make your information security officer cry.
+This plugin allows scripts to download and execute arbitrary code from the
+Internet. Installing it will make your information security officer cry.
 
 
 == Install
 
 Install the plugin using the command:
 
-    plugin install com.github.pukkaone/jar-invoke/VERSION
-
-Configure these properties in the `elasticsearch.yml` file:
-
-[source,yaml]
-----
-script.indexed: true
-script.inline: true
-----
+    elasticsearch-plugin install com.github.pukkaone:jar-invoke:VERSION
 
 
 == Usage
 
-This plugin adds a script language named `jar-invoke` which implements statements to load and
-invoke Java code.
+This plugin adds a script language named `jar-invoke` which implements
+statements to load and invoke Java code.
 
 
 === Require JAR file
