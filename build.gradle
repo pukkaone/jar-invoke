@@ -23,7 +23,7 @@ subprojects {
   sourceCompatibility = JavaVersion.VERSION_1_8
 
   ext {
-    elasticsearchVersion = '6.1.2'
+    elasticsearchVersion = '6.1.3'
   }
 
   repositories {
@@ -36,6 +36,5 @@ subprojects {
     compileOnly 'org.projectlombok:lombok:1.16.20'
     testCompile 'junit:junit:4.12'
     testCompile 'org.assertj:assertj-core:3.9.0'
-    testCompile "org.elasticsearch.client:transport:${elasticsearchVersion}"
   }
 }

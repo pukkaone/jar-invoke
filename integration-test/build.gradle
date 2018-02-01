@@ -2,7 +2,7 @@ dependencies {
   testCompile project(':plugin')
   testCompile 'ch.qos.logback:logback-classic:1.2.3'
   testCompile 'com.github.tomakehurst:wiremock:2.8.0'
-  testCompile "org.elasticsearch:elasticsearch:${elasticsearchVersion}"
+  testCompile "org.elasticsearch.client:transport:${elasticsearchVersion}"
   testCompile 'pl.allegro.tech:embedded-elasticsearch:2.4.0'
 }
 
