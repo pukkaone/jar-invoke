@@ -104,16 +104,16 @@ public class ModuleResolver implements Closeable {
       String jarCoordinates,
       boolean retainAlreadyLoadedModule) {
 
-    Module module = nameToModuleMap.get(moduleName);
-    if (module != null) {
-      if (retainAlreadyLoadedModule) {
-        return null;
-      }
-      module.close();
+    Module originalModule = nameToModuleMap.get(moduleName);
+    if (originalModule != null && retainAlreadyLoadedModule) {
+      return null;
     }
 
-    module = new Module(repositoryUri, jarCoordinates);
-    nameToModuleMap.put(moduleName, module);
+    Module replacementModule = new Module(repositoryUri, jarCoordinates);
+    nameToModuleMap.put(moduleName, replacementModule);
+    if (originalModule != null) {
+      originalModule.close();
+    }
 
     return null;
   }

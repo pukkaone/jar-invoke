@@ -70,10 +70,9 @@ public class JarInvokePluginIT {
     Settings settings = Settings.builder()
         .put(PopularProperties.CLUSTER_NAME, CLUSTER_NAME)
         .build();
-    TransportClient client = new PreBuiltTransportClient(settings)
+    return new PreBuiltTransportClient(settings)
         .addTransportAddress(
             new TransportAddress(InetAddress.getLoopbackAddress(), transportTcpPort));
-    return client;
   }
 
   private static SearchResponse executeScript(String scriptSource, Map<String, Object> parameters) {
@@ -92,6 +91,7 @@ public class JarInvokePluginIT {
 
   @BeforeClass
   public static void beforeClass() throws Exception {
+    int httpPort = findAvailableTcpPort();
     int transportTcpPort = findAvailableTcpPort();
 
     Path pluginFile = Paths.get(".")
@@ -102,6 +102,7 @@ public class JarInvokePluginIT {
     embeddedElastic = EmbeddedElastic.builder()
         .withElasticVersion(Version.CURRENT.toString())
         .withSetting(PopularProperties.CLUSTER_NAME, CLUSTER_NAME)
+        .withSetting(PopularProperties.HTTP_PORT, httpPort)
         .withSetting(PopularProperties.TRANSPORT_TCP_PORT, transportTcpPort)
         .withPlugin("file:" + pluginFile)
         .withIndex(INDEX, IndexSettings.builder()
