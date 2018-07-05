@@ -31,18 +31,14 @@ jar {
 
 task pluginZip(type: Zip) {
   baseName = rootProject.name
-  into('/elasticsearch') {
-    from('src/main/template/plugin-descriptor.properties') {
-      expand(project.properties)
-      filteringCharset = 'UTF-8'
-    }
-    from 'src/main/template/plugin-security.policy'
+  from('src/main/template/plugin-descriptor.properties') {
+    expand(project.properties)
+    filteringCharset = 'UTF-8'
   }
-  into('/elasticsearch') {
-    from jar
-    from configurations.runtime
-    exclude "antlr4-${antlrVersion}.jar"
-  }
+  from 'src/main/template/plugin-security.policy'
+  from jar
+  from configurations.runtime
+  exclude "antlr4-${antlrVersion}.jar"
   doLast {
     copy {
       from pluginZip.archivePath

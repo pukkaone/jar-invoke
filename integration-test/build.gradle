@@ -3,7 +3,7 @@ dependencies {
   testCompile 'ch.qos.logback:logback-classic:1.2.3'
   testCompile 'com.github.tomakehurst:wiremock:2.8.0'
   testCompile "org.elasticsearch.client:transport:${elasticsearchVersion}"
-  testCompile 'pl.allegro.tech:embedded-elasticsearch:2.5.1'
+  testCompile 'pl.allegro.tech:embedded-elasticsearch:2.7.0'
 }
 
 jar {

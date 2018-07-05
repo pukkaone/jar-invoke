@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import org.elasticsearch.Version;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.transport.TransportClient;
@@ -109,6 +110,7 @@ public class JarInvokePluginIT {
             .withSettings(JarInvokePluginIT.class.getResourceAsStream("settings.json"))
             .withType(TYPE, JarInvokePluginIT.class.getResourceAsStream("mappings.json"))
             .build())
+        .withStartTimeout(2, TimeUnit.MINUTES)
         .build()
         .start();
     client = createClient(transportTcpPort);
