@@ -23,8 +23,8 @@ subprojects {
   sourceCompatibility = JavaVersion.VERSION_1_8
 
   ext {
-    elasticsearchVersion = '6.3.1'
-    lombokVersion = '1.18.0'
+    elasticsearchVersion = '6.3.2'
+    lombokVersion = '1.16.20'
   }
 
   repositories {
