@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -24,7 +25,7 @@ import org.elasticsearch.index.fielddata.ScriptDocValues;
  */
 public class ModuleResolver implements Closeable {
 
-  private Map<String, Module> nameToModuleMap = new ConcurrentHashMap<>();
+  private ConcurrentHashMap<String, Module> nameToModuleMap = new ConcurrentHashMap<>();
 
   private static String trimQuotes(String input) {
     if (input.length() < 2) {
@@ -101,18 +102,18 @@ public class ModuleResolver implements Closeable {
   private Void doLoad(
       String moduleName,
       String repositoryUri,
-      String jarCoordinates,
-      boolean retainAlreadyLoadedModule) {
+      String jarCoordinates) {
 
-    Module originalModule = nameToModuleMap.get(moduleName);
-    if (originalModule != null && retainAlreadyLoadedModule) {
-      return null;
-    }
+    AtomicReference<Module> originalModule = new AtomicReference<>();
+    nameToModuleMap.computeIfPresent(moduleName, (key, value) -> {
+      originalModule.set(value);
+      return new Module(repositoryUri, jarCoordinates);
+    });
 
-    Module replacementModule = new Module(repositoryUri, jarCoordinates);
-    nameToModuleMap.put(moduleName, replacementModule);
-    if (originalModule != null) {
-      originalModule.close();
+    if (originalModule.get() != null) {
+      originalModule.get().close();
+    } else {
+      nameToModuleMap.put(moduleName, new Module(repositoryUri, jarCoordinates));
     }
 
     return null;
@@ -128,9 +129,19 @@ public class ModuleResolver implements Closeable {
    * @param jarCoordinates
    *     group ID, artifact ID and version separated by {@code :}
    */
-  public synchronized void load(String moduleName, String repositoryUri, String jarCoordinates) {
+  public void load(String moduleName, String repositoryUri, String jarCoordinates) {
     AccessController.doPrivileged((PrivilegedAction<Void>) () ->
-        doLoad(moduleName, repositoryUri, jarCoordinates, false));
+        doLoad(moduleName, repositoryUri, jarCoordinates));
+  }
+
+  private Void doRequire(
+      String moduleName,
+      String repositoryUri,
+      String jarCoordinates) {
+
+    nameToModuleMap.computeIfAbsent(moduleName, key -> new Module(repositoryUri, jarCoordinates));
+
+    return null;
   }
 
   /**
@@ -143,9 +154,9 @@ public class ModuleResolver implements Closeable {
    * @param jarCoordinates
    *     group ID, artifact ID and version separated by {@code :}
    */
-  public synchronized void require(String moduleName, String repositoryUri, String jarCoordinates) {
+  public void require(String moduleName, String repositoryUri, String jarCoordinates) {
     AccessController.doPrivileged((PrivilegedAction<Void>) () ->
-        doLoad(moduleName, repositoryUri, jarCoordinates, true));
+        doRequire(moduleName, repositoryUri, jarCoordinates));
   }
 
   private Object doInvoke(
