@@ -6,10 +6,6 @@ description = 'Elasticsearch plugin to invoke Java code'
 
 ext {
   antlrVersion = '4.7'
-
-  isReleaseVersion = !(rootProject.version ==~ /.*-\d+-g[0-9a-f]+/)
-  isUploadArchivesEnabled = isReleaseVersion &&
-      project.hasProperty('sonatypeUsername') && project.hasProperty('sonatypePassword')
 }
 
 dependencies {
@@ -64,7 +60,7 @@ artifacts {
   archives pluginZip, javadocJar, sourcesJar
 }
 
-if (project.isUploadArchivesEnabled) {
+if (project.hasProperty('sonatypeUsername') && project.hasProperty('sonatypePassword')) {
   signing {
     sign configurations.archives
   }
