@@ -12,6 +12,7 @@ dependencies {
   antlr "org.antlr:antlr4:${antlrVersion}"
   compile "org.antlr:antlr4-runtime:${antlrVersion}"
   compile 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-maven:2.2.6'
+  compile 'org.glassfish.jaxb:jaxb-runtime:2.4.0-b180830.0438'
 }
 
 generateGrammarSource {
